@@ -28,8 +28,23 @@ def main():
     )
     os.makedirs(output_dir, exist_ok=True)
 
-    for split in ["train", "test", "dev"]:
-        process_common_voice_split(base_path, split, output_dir)
+    # for split in ["train", "test", "dev"]:
+    for split in [
+        "dev",
+        "invalidated",
+        "other",
+        "reported",
+        "test",
+        "train",
+        "unvalidated_sentences",
+        "validated",
+        "validated_sentences.ts",
+    ]:
+        print(split)
+        try:
+            process_common_voice_split(base_path, split, output_dir)
+        except:
+            continue
 
 
 if __name__ == "__main__":
