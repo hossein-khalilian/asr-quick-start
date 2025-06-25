@@ -33,11 +33,6 @@ fi
 
 OUTPUT_PATH="$CACHE_DIR/$BASENAME"
 
-# Function to get remote file size
-get_remote_size() {
-    curl -sI "$1" | grep -i '^Content-Length:' | awk '{print $2}' | tr -d '\r'
-}
-
 # Start download
 echo "[INFO] Downloading to: $OUTPUT_PATH"
 cd "$CACHE_DIR" || {
@@ -45,5 +40,5 @@ cd "$CACHE_DIR" || {
     exit 1
 }
 
-# aria2c -x 16 -s 16 -k 1M -o "$BASENAME" "$SIGNED_URL"
 aria2c --continue=true -x 16 -s 16 -k 1M -o "$BASENAME" "$SIGNED_URL"
+tar -xvzf cv-corpus-22.0-2025-06-20-fa.tar.gz
