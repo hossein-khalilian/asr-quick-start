@@ -42,3 +42,6 @@ cd "$CACHE_DIR" || {
 
 aria2c --continue=true -x 16 -s 16 -k 1M -o "$BASENAME" "$SIGNED_URL"
 tar -xvzf cv-corpus-22.0-2025-06-20-fa.tar.gz
+
+echo "[INFO] Preparing dataset using Python script"
+python3 prepare_common_voice.py
