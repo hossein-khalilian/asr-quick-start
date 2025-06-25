@@ -8,3 +8,8 @@ soundfile
 tqdm
 ipython
 soundfile
+
+num2fawords
+parsivar
+pandas 
+hazm
