@@ -31,14 +31,14 @@ def main():
     # for split in ["train", "test", "dev"]:
     for split in [
         "dev",
-        "invalidated",
-        "other",
-        "reported",
+        # "invalidated",
+        # "other",
+        # "reported",
         "test",
         "train",
-        "unvalidated_sentences",
-        "validated",
-        "validated_sentences.ts",
+        # "unvalidated_sentences",
+        # "validated",
+        # "validated_sentences.ts",
     ]:
         print(split)
         try:

@@ -7,11 +7,11 @@
 CACHE_DIR="$HOME/.cache/commonvoice"
 mkdir -p "$CACHE_DIR"
 
-# Check for aria2c
-if ! command -v aria2c &> /dev/null; then
-    echo "[INFO] aria2c not found. Installing..."
-    sudo apt update && sudo apt install -y aria2 || {
-        echo "[ERROR] Failed to install aria2. Exiting."
+# Check for axel
+if ! command -v axel &> /dev/null; then
+    echo "[INFO] axel not found. Installing..."
+    sudo apt update && sudo apt install -y axel || {
+        echo "[ERROR] Failed to install axel. Exiting."
         exit 1
     }
 fi
@@ -40,8 +40,19 @@ cd "$CACHE_DIR" || {
     exit 1
 }
 
-aria2c --continue=true -x 16 -s 16 -k 1M -o "$BASENAME" "$SIGNED_URL"
-tar -xvzf cv-corpus-22.0-2025-06-20-fa.tar.gz
+# Use axel with 10 connections
+axel -n 4 -o "$BASENAME" "$SIGNED_URL"
+DOWNLOAD_EXIT_CODE=$?
+
+# Check if axel exited successfully and file exists
+if [ $DOWNLOAD_EXIT_CODE -ne 0 ] || [ ! -f "$OUTPUT_PATH" ]; then
+    echo "[ERROR] Download failed or was interrupted. Exiting."
+    exit 1
+fi 
+
+# Extract the downloaded tar.gz
+tar -xvzf "$BASENAME"
 
 echo "[INFO] Preparing dataset using Python script"
+cd -
 python3 prepare_common_voice.py
