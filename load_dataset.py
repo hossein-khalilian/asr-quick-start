@@ -14,7 +14,7 @@ from datasets import (
 
 # dataset = load_dataset("Kamtera/ParsiGoo", trust_remote_code=True)
 
-# dataset = load_dataset("PerSets/filimo-persian-asr", trust_remote_code=True)
+dataset = load_dataset("PerSets/filimo-persian-asr", trust_remote_code=True)
 
 # dataset = load_dataset("PerSets/youtube-persian-asr", trust_remote_code=True)
 
@@ -30,4 +30,4 @@ from datasets import (
 
 # dataset = load_dataset("wuenlp/fleurs-belebele", "pes_Arab", trust_remote_code=True)
 
-# print(dataset)
+print(dataset)
