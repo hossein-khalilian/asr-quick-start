@@ -1,64 +1,52 @@
-import numpy as np
+import os
+
+import soundfile as sf
 import torch
 import torchaudio
-from datasets import load_from_disk
+from datasets import Audio, load_dataset
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-dataset = load_from_disk("/home/user/.cache/huggingface/datasets/filimo/")
+dataset = load_dataset("hsekhalilian/filimo", num_proc=32)
+
+
+output_dir = "/home/user/.cache/datasets/filimo/audio_files"
+os.makedirs(output_dir, exist_ok=True)
+
 target_sr = 16000
 
-
-def pad_waveforms(waveforms):
-    # Pad all waveforms in batch to max length
-    max_len = max(w.shape[0] for w in waveforms)
-    padded = torch.zeros(len(waveforms), max_len, dtype=torch.float32)
-    for i, w in enumerate(waveforms):
-        padded[i, : w.shape[0]] = w
-    return padded
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+resampler_dict = {}
 
 
-def resample_with_torchaudio_batch(batch):
-    waveforms = []
-    orig_srs = []
+def process(example):
+    waveform = torch.tensor(example["audio"]["array"]).unsqueeze(0)  # Shape: [1, T]
+    original_sr = example["audio"]["sampling_rate"]
+    waveform = waveform.to(torch.float32).to(device)
 
-    # Convert all to torch tensors first
-    for audio in batch["audio"]:
-        waveform = torch.tensor(audio["array"], dtype=torch.float32)
-        waveforms.append(waveform)
-        orig_srs.append(audio["sampling_rate"])
+    if not resampler_dict.get(str(original_sr)):
+        resampler_dict[str(original_sr)] = torchaudio.transforms.Resample(
+            orig_freq=original_sr, new_freq=target_sr
+        ).to(device)
 
-    # Pad waveforms to same length and move to device
-    padded_waveforms = pad_waveforms(waveforms).to(
-        device
-    )  # shape: (batch_size, max_len)
-    batch_size = padded_waveforms.size(0)
+    if original_sr != target_sr:
+        resampled = resampler_dict[str(original_sr)](waveform).squeeze(0).cpu().numpy()
+    else:
+        resampled = waveform.squeeze(0).cpu().numpy()
 
-    resampled_batch = []
-    for i in range(batch_size):
-        orig_sr = orig_srs[i]
-        waveform = padded_waveforms[i].unsqueeze(0)  # shape: (1, max_len)
+    filename = os.path.splitext(example["audio"]["path"])[0] + ".flac"
+    output_path = os.path.join(output_dir, filename)
+    sf.write(output_path, resampled, target_sr, format="FLAC")
 
-        if orig_sr != target_sr:
-            resampler = torchaudio.transforms.Resample(
-                orig_freq=orig_sr, new_freq=target_sr
-            ).to(device)
-            waveform = resampler(waveform)
-        resampled_batch.append(waveform.squeeze(0).cpu().numpy())
-
-    # Return list of dicts with resampled waveforms and new sampling rate
     return {
-        "audio": [
-            {"array": resampled_waveform, "sampling_rate": target_sr}
-            for resampled_waveform in resampled_batch
-        ]
+        "audio": output_path,
+        "text": example["text"],
+        "normalized_transcription": example["normalized_transcription"],
     }
 
 
-dataset = dataset.map(
-    resample_with_torchaudio_batch,
-    batched=True,
-    batch_size=16,
-    num_proc=1,
-)
+new_dataset = dataset.map(process)
+new_dataset = new_dataset.cast_column("audio", Audio(sampling_rate=target_sr))
 
-dataset.save_to_disk("/home/user/.cache/huggingface/datasets/filimo_16000")
+new_dataset.save_to_disk(
+    "/home/user/.cache/huggingface/datasets/filimo-resampled",
+    num_proc=16,
+)
