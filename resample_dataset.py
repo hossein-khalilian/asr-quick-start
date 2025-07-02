@@ -5,7 +5,7 @@ import numpy as np
 import soundfile as sf
 from datasets import Audio, load_dataset
 
-dataset_name = "filimo"
+dataset_name = "commonvoice"
 
 dataset = load_dataset(f"hsekhalilian/{dataset_name}", num_proc=32)
 
@@ -26,11 +26,9 @@ def process(example):
     output_path = os.path.join(output_dir, filename)
     sf.write(output_path, resampled, target_sr, format="FLAC")
 
-    return {
-        "audio": output_path,
-        "text": example["text"],
-        "normalized_transcription": example["normalized_transcription"],
-    }
+    example["audio"] = output_path
+
+    return example
 
 
 new_dataset = dataset.map(process, num_proc=32)
