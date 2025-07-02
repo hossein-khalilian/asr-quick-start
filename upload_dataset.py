@@ -1,10 +1,12 @@
 from datasets import load_from_disk
 
+dataset_name = "filimo"
+
 dataset = load_from_disk(
-    "/home/user/.cache/huggingface/datasets/persian-youtube-resampled/"
+    f"/home/user/.cache/huggingface/datasets/{dataset_name}-resampled/"
 )
 
-dataset = dataset.remove_columns("file_name")
+dataset = dataset.rename_column("text", "sentence")
 
 print(dataset)
 print(dataset["train"][0])
@@ -22,4 +24,4 @@ print("Unique characters:", unique_chars)
 print("Number of unique characters:", len(unique_chars))
 
 
-dataset.push_to_hub("hsekhalilian/persian-youtube", private=True)
+dataset.push_to_hub(f"hsekhalilian/{dataset_name}", private=True)
