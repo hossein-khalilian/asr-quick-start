@@ -12,4 +12,3 @@ soundfile
 num2fawords
 parsivar
 pandas 
-hazm
